@@ -2,28 +2,51 @@ import { Request, Response } from 'express';
 import { OrderServices } from './order.services';
 
 
-const createOrder = async (req: Request, res: Response) => {
+const createOrder = async (req: Request, res: Response)=> {
   try {
-    const { order: orderData } = req.body;
+    console.log("Request Body:", req.body);
 
-    const result =
-      await OrderServices.createOrderIntoDb(orderData);
+    const { order } = req.body; 
+    if (!order) {
+      return res.status(400).json({
+        success: false,
+        message: "Order data is required",
+      });
+    }
 
-    
-     res.status(200).json({
-      message: 'Order created successfully',
+    const { email, car, quantity, totalPrice } = order;
+
+    if (!email || !car || !quantity || !totalPrice) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: email, car, quantity, or totalPrice",
+      });
+    }
+
+    const orderData = {
+      email,
+      car,
+      quantity,
+      price: totalPrice, 
+    };
+
+    const result = await OrderServices.createOrderIntoDb(orderData);
+
+    res.status(200).json({
+      message: "Order created successfully",
       success: true,
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Create Order Error:", error);
     res.status(500).json({
       success: false,
-      message: 'Something went wrong',
-      error: error,
+      message: "Something went wrong",
     });
   }
 };
+
+
 
 const calculateRevenue = async (req: Request, res: Response) => {
   try {
